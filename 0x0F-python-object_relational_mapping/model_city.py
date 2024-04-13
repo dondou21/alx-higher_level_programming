@@ -2,16 +2,30 @@
 """
 Contains the class definition of a City
 """
-from model_state import Base
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from model_state import Base, State
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import sys
 
 
-class City(Base):
+def connect_and_query(user: str, passwd: str, dbase: str) -> None:
+
     """
-    Class that defines each city
+    Connect to the database and make queries using ORM
     """
-    __tablename__ = 'cities'
-    id = Column(Integer, unique=True, nullable=False, primary_key=True)
-    name = Column(String(128), nullable=False)
-    state_id = Column(Integer, ForeignKey("states.id"), nullable=False)
+    try:
+        engine = create_engine('mysql+mysqldb://{}:{}@localhost/{}'
+                               .format(user, passwd, dbase))
+        Session = sessionmaker(bind=engine)
+        state_session = Session()
+        states = state_session.query(State).order_by(State.id).all()
+
+        for state in states:
+            if 'a' in state.name:
+                print("{}: {}".format(state.id, state.name))
+    except Exception as e:
+        return e
+
+
+if __name__ == "__main__":
+    connect_and_query(sys.argv[1], sys.argv[2], sys.argv[3])
